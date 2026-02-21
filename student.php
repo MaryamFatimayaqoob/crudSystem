@@ -18,6 +18,9 @@ class Student {
         VALUES (:roll_no, :name, :email, :department, :semester, :cgpa, :status)";
 
         $stmt = $this->conn->prepare($sql);
+        foreach($data as $key => $value){
+    $data[$key] = htmlspecialchars(strip_tags($value));
+}
         return $stmt->execute($data);
 
     } catch(PDOException $e) {
@@ -50,7 +53,34 @@ class Student {
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    public function search($keyword){
 
+    $sql = "SELECT * FROM students 
+            WHERE name LIKE :keyword 
+            OR roll_no LIKE :keyword 
+            OR email LIKE :keyword
+            ORDER BY id DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        'keyword' => "%".$keyword."%"
+    ]);
+
+    return $stmt;
+}
+    public function readPaginated($limit, $offset){
+
+    $sql = "SELECT * FROM students 
+            ORDER BY id DESC 
+            LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+
+    $stmt->execute();
+    return $stmt;
+}
     public function update($data) {
 
         $sql = "UPDATE students SET
